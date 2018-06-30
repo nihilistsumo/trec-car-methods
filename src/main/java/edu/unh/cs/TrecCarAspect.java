@@ -47,12 +47,12 @@ public class TrecCarAspect implements TrecCarPageRepr {
 
 
 
-    private static void sectionContent(Data.Section section, StringBuilder content){
+    private static void sectionContent(Data.Section section, StringBuilder content, StringBuilder parasInSection){
         content.append(section.getHeading()+'\n');
         for (Data.PageSkeleton skel: section.getChildren()) {
-            if (skel instanceof Data.Section) sectionContent((Data.Section) skel, content);
-            else if (skel instanceof Data.Para) paragraphContent(((Data.Para) skel).getParagraph(), content);
-            else if (skel instanceof Data.ListItem) paragraphContent(((Data.ListItem) skel).getBodyParagraph(), content);
+            if (skel instanceof Data.Section) sectionContent((Data.Section) skel, content, parasInSection);
+            else if (skel instanceof Data.Para) paragraphContent(((Data.Para) skel).getParagraph(), content, parasInSection);
+            else if (skel instanceof Data.ListItem) paragraphContent(((Data.ListItem) skel).getBodyParagraph(), content, parasInSection);
             else {
             }
         }
@@ -66,8 +66,14 @@ public class TrecCarAspect implements TrecCarPageRepr {
             }
         }
         }
+    
     private static void paragraphContent(Data.Paragraph paragraph, StringBuilder content){
         content.append(paragraph.getTextOnly()).append('\n');
+    }
+    
+    private static void paragraphContent(Data.Paragraph paragraph, StringBuilder content, StringBuilder parasInSection){
+        content.append(paragraph.getTextOnly()).append('\n');
+        parasInSection.append(paragraph.getParaId()+" ");
     }
 
 
@@ -98,7 +104,8 @@ public class TrecCarAspect implements TrecCarPageRepr {
         final HashMap<TrecCarSearchField, List<String>> result = new HashMap<>();
         final StringBuilder content = new StringBuilder();
         final StringBuilder lead = new StringBuilder(p.getPageName());
-        sectionContent(s, content);
+        final StringBuilder parasInSection = new StringBuilder();
+        sectionContent(s, content, parasInSection);
         leadContent(p, lead);
         result.put(TrecCarSearchField.Text, Collections.singletonList(content.toString()+"\n\n\n"+lead.toString()));
         result.put(TrecCarSearchField.LeadText, Collections.singletonList(lead.toString()));
@@ -108,6 +115,7 @@ public class TrecCarAspect implements TrecCarPageRepr {
         result.put(TrecCarSearchField.Headings, Collections.singletonList(headings.toString()));
         result.put(TrecCarSearchField.Title, Collections.singletonList(p.getPageName()));
 
+        result.put(TrecCarSearchField.ParasInSection, Collections.singletonList(parasInSection.toString().trim()));
 
         return result;
     }
